@@ -11,9 +11,6 @@ echo $(R --version | grep version | grep -v GNU)", seurat version" $(R --vanilla
     ]]></version_command>
     <command detect_errors="exit_code"><![CDATA[
 
-#if $dge_input_format == "salmon_alevin_quant":
-    gunzip $dge_input
-#end if
 
 #if $rscript:
     cp '$__tool_directory__/seurat.R' '$out_rscript' &&
@@ -21,7 +18,9 @@ echo $(R --version | grep version | grep -v GNU)", seurat version" $(R --vanilla
 
 Rscript '$__tool_directory__/seurat.R'
 
---counts '$dge_input'
+--quant_mat $alevin_quants_mat
+--quants_mat_cols $alevin_quants_mat_cols
+--quants_mat_rows $alevin_quants_mat_rows
 --dge.input.format $dge_input_format
 --numPCs $adv.num_PCs
 --min.cells $adv.min_cells
@@ -62,7 +61,9 @@ Rscript '$__tool_directory__/seurat.R'
 ]]></command>
 
     <inputs>
-	<param name="dge_input" type="data" format="tabular" label="Counts file" help="The should be a TAB-separated count matrix with gene identifers in the first column and a header row"/>
+	<param name="alevin_quants_mat" type="data" format="txt" label="Counts file" help="Specify the binary quant matrix from alevin!"/>
+	<param name="alevin_quants_mat_cols" type="data" format="txt" label="Gene names" help="Specify the alevin gene names output file!"/>
+	<param name="alevin_quants_mat_rows" type="data" format="txt" label="Cell names" help="Specify the alevin cell names output file!"/>
 
 	<param name="dge_input_format" label="Choose your input format:" type="select" multiple="false" format="text" help="Select the type of input you have!">
 
@@ -94,21 +95,19 @@ Rscript '$__tool_directory__/seurat.R'
     </inputs>
 
     <outputs>
-        <data name="out_pdf" format="pdf" from_work_dir="out.pdf" label="${tool.name} on ${on_string}: Plots" />
-        <data name="out_rscript" format="txt" from_work_dir="out_rscript.txt" label="${tool.name} on ${on_string}: Rscript">
-            <filter>rscript</filter>
-        </data>
-        <data name="out_rds" format="rds" from_work_dir="Seurat.rds" label="${tool.name} on ${on_string}: RData file">
-            <filter>rds</filter>
-        </data>
+            <data name="out_dge_matrix" format="txt" from_work_dir="dge_matrix.tsv" label="Test DGE matrix from salmon">
+	    </data>
     </outputs>
 
     <tests>
         <!-- Ensure count matrix input works -->
         <test>
-            <param name="counts" ftype="tabular" value="deng_small.tab.gz"/>
-            <param name="min_cells" value="3"/>
-            <param name="min_genes" value="200"/>
+            <param name="alevin_quants_mat" value="quants_mat.csv"/>
+ 	    <param name="alevin_quants_mat_cols" value="quants_mat_cols.txt"/>
+	    <param name="alevin_quants_mat_rows" value="quants_mat_rows.txt"/>
+	    <param name="dge_input_format" value="salmon_alevin_quant"/>
+            <param name="min_cells" value="1"/>
+            <param name="min_genes" value="10"/>
             <param name="low_thresholds" value="1" />
             <param name="high_thresholds" value="20000000" />
             <param name="x_low_cutoff" value="0.0125" />
@@ -119,7 +118,7 @@ Rscript '$__tool_directory__/seurat.R'
             <param name="resolution" value="0.6" />
             <param name="min_pct" value="0.25" />
             <param name="logfc_threshold" value="0.25" />
-            <output name="out_pdf" ftype="pdf" value="out.pdf" compare="sim_size"/>
+	    <output name="out_dge_matrix" value="dge_matrix.tsv" />
         </test>
     </tests>
     <help><![CDATA[
