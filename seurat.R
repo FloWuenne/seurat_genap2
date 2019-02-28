@@ -54,10 +54,9 @@ args = parse_args(parser)
 ## Read in data
 
 ## Check which data input the user chose
-
 ## DGE matrix
 if(args$dge.input.format == "dge_matrix"){
-	counts <- read.delim(args$counts, row.names=1)
+	dge_matrix <- read.delim(args$counts, row.names=1)
 
 ## salmon alevin output
 }else if(args$dge.input.format == "salmon_alevin_quant"){
@@ -65,64 +64,67 @@ if(args$dge.input.format == "dge_matrix"){
 }
 
 ## Test if output was parsed correctly
-write.table(dge_matrix,
-file = "./dge_matrix.tsv",
-sep="\t",
-col.names=TRUE,
-row.names=TRUE,
-quote = FALSE)
+#write.table(dge_matrix,
+#file = "./dge_matrix.tsv",
+#sep="\t",
+#col.names=TRUE,
+#row.names=TRUE,
+#quote = FALSE)
 
 
 ## Create seurat object
-#seuset <- CreateSeuratObject(raw.data = counts, min.cells = args$min.cells, min.genes = args$min.cells)
+seurat_object <- CreateSeuratObject(raw.data = dge_matrix, min.cells = args$min.cells, min.genes = args$min.cells)
 
 # Open PDF for plots
-#pdf("out.pdf")
+pdf("out.pdf")
+VlnPlot(object = seurat_object, features.plot = c("nGene", "nUMI"), nCol = 2)
+GenePlot(object = seurat_object, gene1 = "nUMI", gene2 = "nGene")
 
-#VlnPlot(object = seuset, features.plot = c("nGene", "nUMI"), nCol = 2)
-#GenePlot(object = seuset, gene1 = "nUMI", gene2 = "nGene")
+print("Filtering cells")
+if (!is.null(args$low.thresholds)){
+    lowthresh <- args$low.thresholds
+} else {
+    lowthresh <- "-Inf"
+}
+if (!is.null(args$high.thresholds)){
+    highthresh <- args$high.thresholds
+} else {
+    highthresh <- "Inf"
+}
+seurat_object <- FilterCells(object = seurat_object, subset.names = c("nUMI"), 
+    low.thresholds=c(lowthresh), high.thresholds = c(highthresh))
 
-#print("Filtering cells")
-#if (!is.null(args$low.thresholds)){
-#    lowthresh <- args$low.thresholds
-#} else {
-#    lowthresh <- "-Inf"
-#}
-#if (!is.null(args$high.thresholds)){
-#    highthresh <- args$high.thresholds
-#} else {
-#    highthresh <- "Inf"
-#}
-#seuset <- FilterCells(object = seuset, subset.names = c("nUMI"), 
-#    low.thresholds=c(lowthresh), high.thresholds = c(highthresh))
+print("Normalizing the data")
+seurat_object <- NormalizeData(object = seurat_object, normalization.method = "LogNormalize", 
+    scale.factor = 10000)
 
-#print("Normalizing the data")
-#seuset <- NormalizeData(object = seuset, normalization.method = "LogNormalize", 
-#    scale.factor = 10000)
+print("Finding variable genes")
+seurat_object <- FindVariableGenes(object = seurat_object, mean.function = ExpMean, 
+    dispersion.function = LogVMR, 
+    x.low.cutoff = args$x.low.cutoff, 
+    x.high.cutoff = args$x.high.cutoff,,
+    y.cutoff = args$y.cutoff
+)
 
-#print("Finding variable genes")
-#seuset <- FindVariableGenes(object = seuset, mean.function = ExpMean, 
-#    dispersion.function = LogVMR, 
-#    x.low.cutoff = args$x.low.cutoff, 
-#    x.high.cutoff = args$x.high.cutoff,,
-#    y.cutoff = args$y.cutoff
-#)
+print("Scaling the data and removing unwanted sources of variation")
+seurat_object <- ScaleData(object = seurat_object, vars.to.regress = c("nUMI"))
 
-#print("Scaling the data and removing unwanted sources of variation")
-#seuset <- ScaleData(object = seuset, vars.to.regress = c("nUMI"))
-
-#print("Performing PCA analysis")
-#seuset <- RunPCA(object = seuset, pc.genes = seuset@var.genes)
-#VizPCA(object = seuset, pcs.use = 1:2)
-#PCAPlot(object = seuset, dim.1 = 1, dim.2 = 2)
+print("Performing PCA analysis")
+seurat_object <- RunPCA(object = seurat_object, pc.genes = seurat_object@var.genes, pcs.compute = 4)
+VizPCA(object = seurat_object, pcs.use = 1:16)
+PCAPlot(object = seurat_object, dim.1 = 1, dim.2 = 2)
 #PCHeatmap(
-#    object = seuset, 
+#    object = seurat_object, 
 #    pc.use = 1:args$numPCs, 
 #    cells.use = args$cell.use, 
 #    do.balanced = TRUE, 
 #    label.columns = FALSE,
 #    use.full = FALSE
 #)
+
+dev.off()
+
+saveRDS(seurat_object,file = "seurat_object.Rds")
 
 #print("Determining statistically significant principal components")
 #seuset <- JackStraw(object = seuset, num.replicate = 100, display.progress= FALSE)

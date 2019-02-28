@@ -3,21 +3,18 @@
     <requirements>
         <requirement type="package" version="3.4.1">r-base</requirement>
         <requirement type="package" version="2.3.4">r-seurat</requirement>
-        <requirement type="package" version="1.0.0">bioconductor-singlecellexperiment</requirement> 
+        <requirement type="package" version="1.0.0">bioconductor-singlecellexperiment</requirement>
         <requirement type="package" version="1.6.0">r-optparse</requirement>
+	<requirement type="package" version="0.3.7">umap-learn</requirement>
     </requirements>
     <version_command><![CDATA[
 echo $(R --version | grep version | grep -v GNU)", seurat version" $(R --vanilla --slave -e "library(seurat); cat(sessionInfo()\$otherPkgs\$seurat\$Version)" 2> /dev/null | grep -v -i "WARNING: ")", SingleCellExperiment version" $(R --vanilla --slave -e "library(SingleCellExperiment); cat(sessionInfo()\$otherPkgs\$SingleCellExperiment\$Version)" 2> /dev/null | grep -v -i "WARNING: ")", optparse version" $(R --vanilla --slave -e "library(optparse); cat(sessionInfo()\$otherPkgs\$optparse\$Version)" 2> /dev/null | grep -v -i "WARNING: ")
     ]]></version_command>
     <command detect_errors="exit_code"><![CDATA[
-
-
 #if $rscript:
     cp '$__tool_directory__/seurat.R' '$out_rscript' &&
 #end if
-
 Rscript '$__tool_directory__/seurat.R'
-
 --quant_mat $alevin_quants_mat
 --quants_mat_cols $alevin_quants_mat_cols
 --quants_mat_rows $alevin_quants_mat_rows
@@ -25,7 +22,6 @@ Rscript '$__tool_directory__/seurat.R'
 --numPCs $adv.num_PCs
 --min.cells $adv.min_cells
 --min.genes $adv.min_genes
-
 #if $adv.low_thresholds:
     --low.thresholds $adv.low_thresholds
 #end if
@@ -53,11 +49,9 @@ Rscript '$__tool_directory__/seurat.R'
 #if $adv.logfc_threshold:
     --logfc.threshold $adv.logfc_threshold
 #end if
-
 #if $rds:
     --rds '$rds'
 #end if
-
 ]]></command>
 
     <inputs>
@@ -95,8 +89,8 @@ Rscript '$__tool_directory__/seurat.R'
     </inputs>
 
     <outputs>
-            <data name="out_dge_matrix" format="txt" from_work_dir="dge_matrix.tsv" label="Test DGE matrix from salmon">
-	    </data>
+            <data name="out_pdf" format="pdf" from_work_dir="out.pdf" label="${tool.name} on ${on_string}: Plots" />
+            <data name="seurat_object" format="rds" from_work_dir="seurat_object.Rds" label="Seurat .Rds object"/>
     </outputs>
 
     <tests>
@@ -124,72 +118,41 @@ Rscript '$__tool_directory__/seurat.R'
     <help><![CDATA[
 Seurat pipeline - Galaxy GenAP2 implementation
 ===============================================
-
 This tool enables processing of single-cell data starting from a cell x gene matrix, performing general QC, dimensional reduction and identification of markers as described in the Seurat - Guided Clustering tutorial (https://satijalab.org/seurat/pbmc3k_tutorial.html). This specific tool will produce an RDS object as output that is directly aimed as being used as input to the downstream visualisation tools implemented in GenAP2.
-
 The following features were added to the original seurat tool shed repository:
-
 * Choice of differeent input formats:
 	** Processing of Alevin output into gene x cell matrix format
-
 * Different dimensional reduction methods
 	** Option to choose between UMAP and tSNE (UMAP much faster than tSNE!)
-
 * Return output as a custom RDS object for downstream visualisation tools
-
-
 Contact
 ======================
-
 If you have questions, suggestions or complaints, please send me a mail at: flowuenne@gmail.com!
-
-
-
 Disclaimer
 ==============
-
 This galaxy tool has been completely built upon the seurat implementation in the galaxy tool shed, which can be found in the following github repository:
 https://github.com/galaxyproject/tools-iuc/blob/master/tools/seurat/
-
 and in the galaxy tool shed: https://toolshed.g2.bx.psu.edu/repository?repository_id=589b5d8344f922ec&changeset_revision=8d8412d35247
-
 All credit for the implementation of seurat in galaxy goes to the original package developers!
 Below you can find the original documentation 
-
-
-
-
 Original seurat galaxy tool shed  documentation:
-
 **What it does**
-
 Seurat_ is a toolkit for quality control, analysis, and exploration of single cell RNA sequencing data.
 It is developed and maintained by the `Satija Lab`_ at NYGC. Seurat aims to enable users to identify and
 interpret sources of heterogeneity from single cell transcriptomic measurements, and to integrate diverse
 types of single cell data. See the `Seurat Guided Clustering tutorial`_ for more information.
-
 -----
-
 **Inputs**
-
     * Gene count matrix in TAB-separated format
-
 -----
-
 **Outputs**
-
     * PDF of plots
-
 Optionally you can choose to output
-
     * Seurat RDS object (can use within R)
     * Rscript
-
-
 .. _Seurat: https://www.nature.com/articles/nbt.4096
 .. _Satija Lab: https://satijalab.org/seurat/
 .. _Seurat Guided Clustering tutorial: https://satijalab.org/seurat/pbmc3k_tutorial.html
-
 ]]></help>
     <citations>
         <citation type="doi">10.1038/nbt.4096</citation>
