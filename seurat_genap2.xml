@@ -102,17 +102,18 @@ Rscript '$__tool_directory__/seurat.R'
 	    <param name="dge_input_format" value="salmon_alevin_quant"/>
             <param name="min_cells" value="1"/>
             <param name="min_genes" value="10"/>
-            <param name="low_thresholds" value="1" />
+            <param name="low_thresholds" value="1"/>
             <param name="high_thresholds" value="20000000" />
             <param name="x_low_cutoff" value="0.0125" />
             <param name="x_high_cutoff" value="3" />
             <param name="y_cutoff" value="0.5" />
-            <param name="numPCs" value="10" />
+            <param name="numPCs" value="4" />
             <param name="cells_use" value="500"/>
             <param name="resolution" value="0.6" />
             <param name="min_pct" value="0.25" />
             <param name="logfc_threshold" value="0.25" />
-	    <output name="out_dge_matrix" value="dge_matrix.tsv" />
+	    <output name="seurat_object" value="seurat_object.Rds"/>
+            <output name="out_pdf" value="seurat_plots.pdf"/>
         </test>
     </tests>
     <help><![CDATA[
