@@ -26,8 +26,7 @@ option_list <- list(
     make_option(c("-cells.use","--cells.use"), type="integer", help="Cells to use for PCHeatmap"),
     make_option(c("-resolution","--resolution"), type="double", help="Resolution in FindClusters"),
     make_option(c("-min.pct","--min.pct"), type="double", help="Minimum percent cells in FindClusters"),
-    make_option(c("-logfc.threshold","--logfc.threshold"), type="double", help="LogFC threshold in FindClusters"),
-    make_option(c("-rds","--rds"), type="logical", help="Output Seurat RDS object")
+    make_option(c("-logfc.threshold","--logfc.threshold"), type="double", help="LogFC threshold in FindClusters")
   )
 
 ## Functions
@@ -111,8 +110,9 @@ seurat_object <- ScaleData(object = seurat_object, vars.to.regress = c("nUMI"))
 
 print("Performing PCA analysis")
 seurat_object <- RunPCA(object = seurat_object, pc.genes = seurat_object@var.genes, pcs.compute = 4)
-VizPCA(object = seurat_object, pcs.use = 1:16)
+#VizPCA(object = seurat_object, pcs.use = 1:16)
 PCAPlot(object = seurat_object, dim.1 = 1, dim.2 = 2)
+
 #PCHeatmap(
 #    object = seurat_object, 
 #    pc.use = 1:args$numPCs, 
